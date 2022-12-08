@@ -416,3 +416,304 @@ int minDepth(struct TreeNode* root){
 
 
 
+## 112.路经总和(简单)
+
+https://leetcode.cn/problems/path-sum/description/
+
+```c
+void pathTraverse(struct TreeNode* root, int path_sum, int targetSum, int *hasPath) {
+    int sum;
+    
+    if(root && *hasPath == 0) {
+        sum = path_sum + root->val;
+
+        if(root->left == NULL && root->right == NULL) {
+            if(sum == targetSum) 
+                *hasPath = 1;
+        }
+        else {
+            pathTraverse(root->left, sum, targetSum, hasPath);
+            pathTraverse(root->right, sum, targetSum, hasPath);
+        }
+    }
+}
+
+
+bool hasPathSum(struct TreeNode* root, int targetSum) {
+    int retVal;
+
+    retVal = 0;
+
+    pathTraverse(root, 0, targetSum, &retVal);
+
+    return retVal == 1 ? true : false;
+}
+```
+
+**需要注意C的关系并不依赖于缩进，else是与最近的未匹配的if进行匹配。**
+
+
+
+## 144.二叉树的前序遍历(简单)
+
+https://leetcode.cn/problems/binary-tree-preorder-traversal/description/
+
+### 解法1：递归实现
+
+```c
+void preOrdTraverse(struct TreeNode* root, int *retArr, int *returnSize) {
+    if(root) {
+        retArr[(*returnSize)++] = root -> val;
+
+        preOrdTraverse(root->left, retArr, returnSize);
+        preOrdTraverse(root->right, retArr, returnSize);
+    }
+}
+
+int* preorderTraversal(struct TreeNode* root, int* returnSize) {
+    int *retArr;
+
+    *returnSize = 0;
+    retArr = NULL;
+
+    if(root) {
+        retArr = (int*)malloc(sizeof(int)*100);
+
+        preOrdTraverse(root, retArr, returnSize);
+    }
+
+    return retArr;
+}
+```
+
+### 解法2：迭代实现
+
+```c
+struct TNode {
+    struct TreeNode *root;
+    int tag;
+};
+typedef struct TNode *PtrToTNode;
+
+struct SNode {
+    PtrToTNode SArr[100];
+    int top;
+};
+typedef struct SNode *Stack;
+
+Stack makeStack() {
+    Stack new_stack;
+
+    new_stack = (Stack)malloc(sizeof(struct SNode));
+
+    new_stack->top = -1;
+
+    return new_stack;
+}
+
+void pushStack(Stack s, PtrToTNode ptr) {
+    s->SArr[++s->top] = ptr;
+}
+
+PtrToTNode popStack(Stack s) {
+    return s->SArr[s->top--];
+}
+
+int isEmptyStack(Stack s) {
+    if(s->top == -1)
+        return 1;
+    else
+        return 0;
+}
+
+int* preorderTraversal(struct TreeNode* root, int* returnSize) {
+    int *retArr;
+    PtrToTNode tree_node ,new_node;
+    Stack s;
+
+    s = makeStack();
+
+    retArr = NULL;
+    *returnSize = 0;
+    
+    if(root) {
+        retArr = (int*)malloc(sizeof(int)*100);
+
+        tree_node = (PtrToTNode)malloc(sizeof(struct TNode));
+
+        tree_node->root = root;
+        tree_node->tag = 1;
+
+        pushStack(s, tree_node);
+    }
+
+    while(!isEmptyStack(s)) {
+        tree_node = popStack(s);
+
+        if(tree_node->tag) {
+            if(tree_node->root->right) {
+                new_node = (PtrToTNode)malloc(sizeof(struct TNode));
+
+                new_node->tag = 1;
+                new_node->root = tree_node->root->right;
+
+                pushStack(s, new_node);
+            }
+
+            if(tree_node->root->left) {
+                new_node = (PtrToTNode)malloc(sizeof(struct TNode));
+
+                new_node->tag = 1;
+                new_node->root = tree_node->root->left;
+
+                pushStack(s, new_node);
+            }
+
+            tree_node->tag = 0;
+            pushStack(s, tree_node);
+        }
+        else {
+            retArr[(*returnSize)++] = tree_node->root->val;
+
+            free(tree_node);
+        }
+    }
+
+    return retArr;
+}
+```
+
+
+
+## 145.二叉树的后序遍历(简单)
+
+https://leetcode.cn/problems/binary-tree-postorder-traversal/description/
+
+### 解法1：递归实现
+
+```c
+void postOrdTraverse(struct TreeNode* root, int *retArr, int *returnSize) {
+    if(root) {
+        postOrdTraverse(root->left, retArr, returnSize);
+        postOrdTraverse(root->right, retArr, returnSize);
+        
+        retArr[(*returnSize)++] = root -> val;
+    }
+}
+
+int* postorderTraversal(struct TreeNode* root, int* returnSize) {
+    int *retArr;
+
+    *returnSize = 0;
+    retArr = NULL;
+
+    if(root) {
+        retArr = (int*)malloc(sizeof(int)*100);
+
+        postOrdTraverse(root, retArr, returnSize);
+    }
+
+    return retArr;
+
+}
+```
+
+### 解法2：迭代实现
+
+```c
+struct TNode {
+    struct TreeNode *root;
+    int tag;
+};
+typedef struct TNode *PtrToTNode;
+
+struct SNode {
+    PtrToTNode SArr[100];
+    int top;
+};
+typedef struct SNode *Stack;
+
+Stack makeStack() {
+    Stack new_stack;
+
+    new_stack = (Stack)malloc(sizeof(struct SNode));
+
+    new_stack->top = -1;
+
+    return new_stack;
+}
+
+void pushStack(Stack s, PtrToTNode ptr) {
+    s->SArr[++s->top] = ptr;
+}
+
+PtrToTNode popStack(Stack s) {
+    return s->SArr[s->top--];
+}
+
+int isEmptyStack(Stack s) {
+    if(s->top == -1)
+        return 1;
+    else
+        return 0;
+}
+
+int* postorderTraversal(struct TreeNode* root, int* returnSize){
+    int *retArr;
+    PtrToTNode tree_node ,new_node;
+    Stack s;
+
+    s = makeStack();
+
+    retArr = NULL;
+    *returnSize = 0;
+    
+    if(root) {
+        retArr = (int*)malloc(sizeof(int)*100);
+
+        tree_node = (PtrToTNode)malloc(sizeof(struct TNode));
+
+        tree_node->root = root;
+        tree_node->tag = 1;
+
+        pushStack(s, tree_node);
+    }
+
+    while(!isEmptyStack(s)) {
+        tree_node = popStack(s);
+
+        if(tree_node->tag) {
+            tree_node->tag = 0;
+            pushStack(s, tree_node);
+
+            if(tree_node->root->right) {
+                new_node = (PtrToTNode)malloc(sizeof(struct TNode));
+
+                new_node->tag = 1;
+                new_node->root = tree_node->root->right;
+
+                pushStack(s, new_node);
+            }
+
+            if(tree_node->root->left) {
+                new_node = (PtrToTNode)malloc(sizeof(struct TNode));
+
+                new_node->tag = 1;
+                new_node->root = tree_node->root->left;
+
+                pushStack(s, new_node);
+            }
+        }
+        else {
+            retArr[(*returnSize)++] = tree_node->root->val;
+
+            free(tree_node);
+        }
+    }
+
+    return retArr;
+}
+```
+
+
+
