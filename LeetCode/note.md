@@ -2,6 +2,50 @@
 
 
 
+## 26.
+
+### 解法1：暴力求解
+
+```c
+int removeDuplicates(int* nums, int numsSize) {
+    for(int i = 1; i < numsSize; i++) {
+        if(nums[i] == nums[i-1]) {
+            for(int j = i; j < numsSize-1; j++) {
+                nums[j] = nums[j+1];
+            }
+            numsSize -= 1;
+            i -= 1;
+        }
+    }
+
+    return numsSize;
+}
+```
+
+### 解法2：双指针法
+
+```c
+int removeDuplicates(int* nums, int numsSize) {
+    int fast_ptr, slow_ptr;
+
+    slow_ptr = fast_ptr = 1;
+
+    while(fast_ptr < numsSize) {
+        if(nums[fast_ptr] != nums[fast_ptr-1]) {
+            nums[slow_ptr++] = nums[fast_ptr];
+        }
+
+        fast_ptr += 1;
+    }
+
+    return slow_ptr;
+}
+```
+
+双指针一块一慢，保证一次遍历就可以实现，时间复杂度为$O(n)$.
+
+
+
 ## 94.二叉树的中序遍历(简单)
 
 https://leetcode.cn/problems/binary-tree-inorder-traversal/
