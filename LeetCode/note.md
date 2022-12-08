@@ -2,7 +2,9 @@
 
 
 
-## 26.
+## 26.删除有序数组中的重复项(简单)
+
+https://leetcode.cn/problems/remove-duplicates-from-sorted-array/description/
 
 ### 解法1：暴力求解
 
