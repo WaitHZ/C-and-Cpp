@@ -1,0 +1,418 @@
+# LeetCode
+
+
+
+## 94.二叉树的中序遍历(简单)
+
+https://leetcode.cn/problems/binary-tree-inorder-traversal/
+
+### 解法1：递归实现
+
+```c
+int* inorderTraversal(struct TreeNode* root, int* returnSize)
+{
+    int left_size, right_size, *left_sub_tree, *right_sub_tree, *retArr, index;
+
+    if(root == NULL) {
+        *returnSize = 0;
+        return NULL;
+    } 
+    else {
+        left_sub_tree = inorderTraversal(root->left, &left_size);
+        right_sub_tree = inorderTraversal(root->right, &right_size);
+        
+        *returnSize = 1 + left_size + right_size;
+        retArr = (int*)malloc(sizeof(int)*(*returnSize));
+        
+        for(index = 0; index < left_size; index++)
+            retArr[index] = left_sub_tree[index];
+        retArr[index++] = root -> val;
+        for(int i = 0; i < right_size; i++)
+            retArr[index+i] = right_sub_tree[i];
+
+        return retArr;
+    }
+}
+```
+
+### 解法2：迭代实现
+
+借助栈和一个tag实现迭代遍历。
+
+```c
+#define MAXN 100
+
+struct RNode {
+    struct TreeNode *root;
+    int is_first;
+};
+typedef struct RNode *PtrToRNode;
+
+struct SNode {
+    PtrToRNode SArr[MAXN];
+    int top;
+};
+typedef struct SNode *Stack;
+
+Stack makeStack() {
+    Stack new_stack;
+
+    new_stack = (Stack)malloc(sizeof(struct SNode));
+
+    new_stack->top = -1;
+
+    return new_stack;
+}
+
+void pushStack(Stack s, PtrToRNode ptr) {
+    s->SArr[++s->top] = ptr;
+}
+
+PtrToRNode popStack(Stack s) {
+    return s->SArr[s->top--];
+}
+
+int isEmptyStack(Stack s) {
+    if(s->top == -1)
+        return 1;
+    else
+        return 0;
+}
+
+int* inorderTraversal(struct TreeNode* root, int* returnSize) {
+    Stack s;
+    PtrToRNode root_node, new_root_node;
+    int *retArr;
+
+    retArr = NULL;
+    *returnSize = 0;
+
+    if(root) {
+        *returnSize = 0;
+        retArr = (int*)malloc(sizeof(int)*100);
+
+        s = makeStack();
+
+        if(root->right) {
+            root_node = (PtrToRNode)malloc(sizeof(struct RNode));
+            root_node->root = root->right;
+            root_node->is_first = 1;
+
+            pushStack(s, root_node);
+        }
+        
+        root_node = (PtrToRNode)malloc(sizeof(struct RNode));
+        root_node->root = root;
+        root_node->is_first = 0;
+        pushStack(s, root_node);
+
+        if(root->left) {
+            root_node = (PtrToRNode)malloc(sizeof(struct RNode));
+            root_node->root = root->left;
+            root_node->is_first = 1;
+
+            pushStack(s, root_node);
+        }
+
+        while(!isEmptyStack(s)) {
+            root_node = popStack(s);
+
+            if(root_node->is_first == 0) {
+                retArr[(*returnSize)++] = root_node->root->val;
+
+                free(root_node);
+            }
+            else {
+                if(root_node->root->right) {
+                    new_root_node = (PtrToRNode)malloc(sizeof(struct RNode));
+                    new_root_node->root = root_node->root->right;
+                    new_root_node->is_first = 1;
+
+                    pushStack(s, new_root_node);
+                }
+
+                root_node->is_first = 0;
+                pushStack(s, root_node);
+
+                if(root_node->root->left) {
+                    new_root_node = (PtrToRNode)malloc(sizeof(struct RNode));
+                    new_root_node->root = root_node->root->left;
+                    new_root_node->is_first = 1;
+
+                    pushStack(s, new_root_node);
+                }
+            }
+        }
+    }
+
+    return retArr;
+}
+```
+
+
+
+## 101.对称二叉树(简单)
+
+https://leetcode.cn/problems/symmetric-tree/description/
+
+```c
+bool isReversed(struct TreeNode *root1, struct TreeNode *root2) {
+    bool retBool;
+
+    retBool = false;
+
+    if(root1 == NULL && root2 == NULL)
+        retBool = true;
+    else if(root1 == NULL || root2 == NULL)
+        ;
+    else if(root1->val == root2->val) {
+        return isReversed(root1->left, root2->right) && isReversed(root1->right, root2->left);
+    }
+
+    return retBool;
+}
+
+bool isSymmetric(struct TreeNode* root) {
+    return isReversed(root->left, root->right);
+}
+```
+
+
+
+## 102.二叉树的层序遍历(中等)
+
+https://leetcode.cn/problems/binary-tree-level-order-traversal/description/
+
+```c
+struct RNode {
+    struct TreeNode *root;
+    int layer;
+};
+typedef struct RNode *PtrToRNode;
+
+struct QNode {
+    PtrToRNode QArr[2000];
+    int font, end;
+};
+typedef struct QNode *Queue;
+
+Queue makeQueue() {
+    Queue new_q;
+
+    new_q = malloc(sizeof(struct QNode));
+
+    new_q->font = new_q->end = 0;
+
+    return new_q;
+}
+
+bool isEmptyQueue(Queue q) {
+    return q->end == q->font ? true : false;
+}
+
+void enQueue(Queue q, PtrToRNode ptr) {
+    q->QArr[++q->end] = ptr;
+}
+
+PtrToRNode deQueue(Queue q) {
+    return q->QArr[++q->font];
+}
+
+int** levelOrder(struct TreeNode* root, int* returnSize, int** returnColumnSizes) {
+    int **retArr;
+    Queue q;
+    PtrToRNode tree_node, new_tree_node;
+
+    retArr = NULL;
+
+    *returnSize = 0;
+    
+    if(root == NULL)
+        *returnColumnSizes = NULL;
+    else {
+        retArr = (int**)malloc(sizeof(int*)*2000);
+        *returnColumnSizes = (int*)malloc(sizeof(int)*2000);
+
+        for(int i = 0; i < 2000; i++) {
+            retArr[i] = NULL;
+            (*returnColumnSizes)[i] = 0;
+        }
+
+        q = makeQueue();
+
+        tree_node = (PtrToRNode)malloc(sizeof(struct RNode));
+        tree_node->root = root;
+        tree_node->layer = 0;
+        enQueue(q, tree_node);
+
+        while(!isEmptyQueue(q)) {
+            tree_node = deQueue(q);
+
+            (*returnColumnSizes)[tree_node->layer] += 1;
+
+            retArr[tree_node->layer] = realloc(retArr[tree_node->layer], sizeof(int)*((*returnColumnSizes)[tree_node->layer]));
+
+            retArr[tree_node->layer][(*returnColumnSizes)[tree_node->layer]-1] = tree_node->root->val;
+
+            if(tree_node->root->left) {
+                new_tree_node = (PtrToRNode)malloc(sizeof(struct RNode));
+                new_tree_node->root = tree_node->root->left;
+                new_tree_node->layer = tree_node->layer + 1;
+
+                enQueue(q, new_tree_node);
+            }
+
+            if(tree_node->root->right) {
+                new_tree_node = (PtrToRNode)malloc(sizeof(struct RNode));
+                new_tree_node->root = tree_node->root->right;
+                new_tree_node->layer = tree_node->layer + 1;
+
+                enQueue(q, new_tree_node);
+            }
+
+            *returnSize = tree_node->layer + 1 > *returnSize ? tree_node->layer + 1 : *returnSize;
+            free(tree_node);
+        }
+    }
+
+    return retArr;
+}
+```
+
+一个重要却容易被忽视的内容：
+
+![](./img/优先级.jpg)
+
+解引用的运算优先级低于[]，所以需要对下面的代码加以区分：
+
+```c
+*Arr[size];
+(*Arr)[size];
+```
+
+
+
+## 104.二叉树的最大深度(简单)
+
+https://leetcode.cn/problems/maximum-depth-of-binary-tree/description/
+
+```c
+int maxDepth(struct TreeNode* root){
+    int max_depth, left_depth, right_depth;
+
+    max_depth = 0;
+
+    if(root) {
+        left_depth = maxDepth(root->left);
+        right_depth = maxDepth(root->right);
+
+        max_depth = left_depth > right_depth ? left_depth + 1 : right_depth + 1;
+    }
+
+    return max_depth;
+}
+```
+
+
+
+
+
+## 108.将有序数组转换为二叉搜索树(简单)
+
+https://leetcode.cn/problems/convert-sorted-array-to-binary-search-tree/description/
+
+```c
+struct TreeNode* sortedArrayToBST(int* nums, int numsSize){
+    struct TreeNode *root;
+    int *left_sub_arr, *right_sub_arr;
+
+    root = NULL;
+
+    if(numsSize > 0) {
+        root = (struct TreeNode*)malloc(sizeof(struct TreeNode));
+
+        root->val = nums[numsSize/2];
+
+        left_sub_arr = (int*)malloc(sizeof(int)*(numsSize/2));
+        right_sub_arr = (int*)malloc(sizeof(int)*(numsSize-1-numsSize/2));
+
+        memcpy(left_sub_arr, nums, sizeof(int)*(numsSize/2));
+        memcpy(right_sub_arr, &nums[numsSize/2+1], sizeof(int)*(numsSize-1-numsSize/2));
+
+        root->left = sortedArrayToBST(left_sub_arr, numsSize/2);
+        free(left_sub_arr);
+        root->right = sortedArrayToBST(right_sub_arr, numsSize-1-numsSize/2);
+        free(right_sub_arr);
+    }
+
+    return root;
+}
+```
+
+
+
+## 110.平衡二叉树(简单)
+
+https://leetcode.cn/problems/balanced-binary-tree/description/
+
+```c
+int getTreeHeight(struct TreeNode *root) {
+    int height;
+
+    height = 0;
+    
+    if(root)
+        height = getTreeHeight(root->left) > getTreeHeight(root->right) ? 1+getTreeHeight(root->left) : 1+getTreeHeight(root->right);
+
+    return height;
+}
+
+bool isBalanced(struct TreeNode* root) {
+    bool retBoolean;
+
+    retBoolean = true;
+    
+    if(root)
+        if(!(isBalanced(root->left) && isBalanced(root->right)) || fabs(getTreeHeight(root->left)-getTreeHeight(root->right)) > 1)
+        retBoolean = false;
+
+    return retBoolean;
+}
+```
+
+
+
+
+
+## 111.二叉树的最小深度(简单)
+
+https://leetcode.cn/problems/minimum-depth-of-binary-tree/description/
+
+```c
+void preOrderTraverse(struct TreeNode *root, int *min_depth, int layer) {
+    if(root) {
+        if(root->left || root->right) {
+            preOrderTraverse(root->left, min_depth, layer+1);
+            preOrderTraverse(root->right, min_depth, layer+1);
+        }
+        else
+            *min_depth = *min_depth > layer ? layer : *min_depth;
+    }
+}
+
+int minDepth(struct TreeNode* root){
+    int min_depth;
+
+    min_depth = 10000;
+
+    preOrderTraverse(root, &min_depth, 1);
+
+    if(!root)
+        min_depth = 0;
+
+    return min_depth;
+}
+```
+
+
+
