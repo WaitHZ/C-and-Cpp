@@ -151,6 +151,66 @@ int* inorderTraversal(struct TreeNode* root, int* returnSize) {
 
 
 
+## 98.验证二叉搜索树(中等)
+
+https://leetcode.cn/problems/validate-binary-search-tree/description/
+
+```c
+int getMax(struct TreeNode* root) {
+    struct TreeNode *ptr;
+    int max_val;
+
+    ptr = root;
+
+    while(ptr) {
+        max_val = ptr->val;
+        ptr = ptr->right;
+    }
+
+    return max_val;
+}
+
+int getMin(struct TreeNode *root) {
+    struct TreeNode *ptr;
+    int min_val;
+
+    ptr = root;
+
+    while(ptr) {
+        min_val = ptr->val;
+        ptr = ptr->left;
+    }
+
+    return min_val;
+}
+
+bool isValidBST(struct TreeNode* root) {
+    bool retBool;
+
+    retBool = true;
+
+    if(root) {
+        if(!(isValidBST(root->left) && isValidBST(root->right))) {
+            retBool = false;
+        }
+        else {
+            if(root->left && root->right && !(root->val > getMax(root->left) && root->val < getMin(root->right)))
+                retBool = false;
+            else if(root->left && getMax(root->left) >= root->val)
+                retBool = false;
+            else if(root->right && getMin(root->right) <= root->val)
+                retBool = false;
+        }
+    }
+
+    return retBool;
+}
+```
+
+
+
+
+
 ## 101.对称二叉树(简单)
 
 https://leetcode.cn/problems/symmetric-tree/description/
