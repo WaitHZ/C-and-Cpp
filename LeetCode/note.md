@@ -2,6 +2,82 @@
 
 
 
+## 14.最长的公共前缀
+
+https://leetcode.cn/problems/longest-common-prefix/description/
+
+```c
+char * longestCommonPrefix(char ** strs, int strsSize) {
+    char *min_str, *max_str;
+    int index;
+
+    min_str = max_str = strs[0];
+
+    for(int i = 1; i < strsSize; i++) {
+        if(strcmp(min_str, strs[i]) > 0) {
+            min_str = strs[i];
+        }
+        if(strcmp(max_str, strs[i]) < 0) {
+            max_str = strs[i];
+        }
+    }
+
+    for(index = 0; index < strlen(min_str); index++) {
+        if(max_str[index] != min_str[index])
+            break;
+    }
+
+    min_str[index] = '\0';
+
+    return min_str;
+}
+```
+
+巧妙地借助了字典序。
+
+
+
+## 19. 删除链表的倒数第 N 个结点
+
+https://leetcode.cn/problems/remove-nth-node-from-end-of-list/description/
+
+```c
+struct ListNode* removeNthFromEnd(struct ListNode* head, int n){
+    struct ListNode *ptr, *tmp_ptr;
+    int node_count, n_in_order;
+
+    ptr = head;
+    node_count = 0;
+
+    while(ptr) {
+        node_count += 1;
+        ptr = ptr->next;
+    }
+    n_in_order = node_count - n + 1;
+
+    if(n_in_order == 1) {
+        tmp_ptr = head;
+        head = head ->next;
+
+        free(tmp_ptr);
+    }
+    else {
+        ptr = head;
+        for(int i = 0; i < n_in_order-2; i++)
+            ptr = ptr->next;
+
+        tmp_ptr = ptr->next;
+        ptr->next = tmp_ptr ? tmp_ptr->next : NULL;
+
+        free(tmp_ptr);
+    }
+
+    return head;
+}
+```
+
+
+
 ## 26.删除有序数组中的重复项(简单)
 
 https://leetcode.cn/problems/remove-duplicates-from-sorted-array/description/
@@ -45,6 +121,86 @@ int removeDuplicates(int* nums, int numsSize) {
 ```
 
 双指针一块一慢，保证一次遍历就可以实现，时间复杂度为$O(n)$.
+
+
+
+## 27. 移除元素
+
+https://leetcode.cn/problems/remove-element/description/
+
+```c
+int removeElement(int* nums, int numsSize, int val){
+    int slow_ptr, fast_ptr;
+
+    slow_ptr = fast_ptr = 0;
+
+    while(fast_ptr < numsSize) {
+        if(nums[fast_ptr] != val) {
+            nums[slow_ptr++] = nums[fast_ptr];
+        }
+
+        fast_ptr += 1;
+    }
+
+    return slow_ptr;
+}
+```
+
+双指针，时间复杂度为$O(n)$.
+
+
+
+## 28.找出字符串中第一个匹配项的下标
+
+https://leetcode.cn/problems/find-the-index-of-the-first-occurrence-in-a-string/description/
+
+```c
+int strStr(char * haystack, char * needle) {
+    int slow_ptr, fast_ptr, in_needle;
+
+    if(strlen(haystack) < strlen(needle))
+        return -1;
+    else if(strlen(needle) == 1) {
+        for(int i = 0; i < strlen(haystack); i++)
+        {
+            if(haystack[i] == needle[0])
+                return i;
+        }
+
+        return -1;
+    }
+
+    slow_ptr = fast_ptr = 0;
+    in_needle = 0;
+
+    while(fast_ptr < strlen(haystack)) {
+        if(in_needle) {
+            if(haystack[fast_ptr] == needle[fast_ptr-slow_ptr] && haystack[fast_ptr] != '\0')
+                fast_ptr += 1;
+            else {
+                slow_ptr += 1;
+                fast_ptr = slow_ptr;
+                in_needle = 0;
+            }
+        }
+        else {
+            if(haystack[fast_ptr] == needle[0])
+                in_needle = 1;
+            else
+                slow_ptr = ++fast_ptr;
+        }
+
+        if(haystack[fast_ptr] == needle[fast_ptr-slow_ptr] && fast_ptr-slow_ptr+1 == strlen(needle))
+            break;
+    }
+
+    if(fast_ptr == strlen(haystack)) {
+        fast_ptr -= 1;
+    }
+
+    return fast_ptr-slow_ptr+1 != strlen(needle) ? -1 : slow_ptr;
+}
+```
 
 
 
