@@ -333,6 +333,141 @@ void insertSort(int *arr, int size) {
 
 ### 希尔排序
 
+希尔排序是对插入排序的一种优化，基本思想为：
+
+- 将待排序数组按照一定的间隔分为多个子数组，每组分别进行插入排序。这里按照间隔分组指的不是取连续的一段数组，而是每跳跃一定间隔取一个值组成一组
+- 逐渐缩小间隔进行下一轮排序
+- 最后一轮时，取间隔为1，也就相当于直接使用插入排序。但这时经过前面的**宏观调控**，数组已经基本有序了，所以此时的插入排序只需进行少量交换便可完成
+
+*在插入排序时提到，在接近有序的数组中，插入排序的时间复杂度接近线性
+
+**注意到在更小间隔排序时，并不会破坏较大间隔排序的有序性**
+
+每一遍排序的间隔在希尔排序中被称之为**增量**，所有的增量组成的序列称之为**增量序列**。增量依次递减，最后一个增量必须为1，所以希尔排序又被称之为**缩小增量排序**。因此，排序分为以下两个步骤:
+
+- 定义增量序列$D_m > D_{m-1} >...>D_2>D_1=1$
+- 对每个$D_k$进行间隔插入排序
+
+希尔排序的性能由下面这条性质保证：
+
+- $D_{k+1}$间隔有序再经过$D_k$间隔排列后仍满足$D_{k+1}$间隔有序
+
+**增量序列的选择会极大程度的影响希尔排序的效率**，常见的增量序列如下：
+
+#### 希尔增量
+
+希尔增量序列：$D_m=\frac{N}{2},\,D_{k+1}=\frac{D_k}{2}$
+
+```c
+void shellSort(int *arr, int size) {
+    int gap;
+    
+    gap = size / 2;
+    
+    while(gap > 0) {
+        for(int i = 0; i < gap; i++) {
+            for(int j = i+gap; j < size; j+=gap) {
+                int currentNum, index;
+                
+                currentNum = arr[j];
+                index = j - gap;
+                while(index >= i && arr[index] > currentNum) {
+                    arr[index+gap] = arr[index];
+                    index -= gap;
+                }
+                
+                arr[index+gap] = currentNum;
+            }
+        }
+        gap /= 2;
+    }
+}
+```
+
+从访存的角度考虑，跳跃式访存的速度会慢于访问连续的内存，因此代码可进一步优化：
+
+```c
+void shellSort(int *arr, int size) {
+    int gap;
+    
+    gap = size / 2;
+    
+    while(gap > 0) {
+        for(int i = gap; i < size; i++) {
+            int currentNum, index;
+            
+            currentNum = arr[i];
+            index = i - gap;
+            while(index >= 0 && arr[index] > currentNUm) {
+                arr[index+gap] = arr[index];
+                index -= gap;
+            }
+            arr[index+gap] = currentNum;
+        }
+        gap /= 2;
+    }
+}
+```
+
+研究者发现，**增量元素不互质，则小增量可能根本不起作用**。希尔增量序列一旦出现偶数就会导致不互质，从而增加许多无用的操作，效率较低。
+
+#### 希伯德(Hibbard)增量序列
+
+- $D_k=2^k-1$，即$1, 3, 7, 15$...数学界猜想其最坏的时间复杂度为$O(n^{\frac{3}{2}})$，平均时间复杂度为$O(n^{\frac{5}{4}})$
+
+#### Knuth增量序列
+
+- $D_1=1,\,D_{k+1}=3D_k+1$，即$1,4,13,40$...数学界猜想其平均时间复杂度为$O(n^{\frac{3}{2}})$
+
+#### Sedgewick增量序列
+
+- $1,5,19,41,109,$... 有的元素依据$9\times4^k−9\times2^k+1$计算得到，有的元素依据$4^k−3\times2^k+1$计算得到。数学界猜想其最坏的时间复杂度为$O(n^{\frac{4}{3}})$，平均时间复杂度为$O(n^{\frac{7}{6}})$
+
+*以上时间复杂度都未得到证明，只是数学界的猜想
+
+以Knuth增量序列为例，编写下方代码：
+
+```c
+void shellSort(int *arr, int size) {
+    int gap;
+    
+    gap = 1;
+    while(gap < size/3) {
+        gap = gap * 3 + 1;
+    }
+    
+    while(gap > 0) {
+        for(int i = gap; i < size; i++) {
+            int currentNum, index;
+            
+            currentNum = arr[i];
+            index = i - gap;
+            while(index >= 0 && arr[index] > currentNum) {
+                arr[index+gap] = arr[index];
+                index -= gap;
+            }
+            arr[index+gap] = currentNum;
+        }
+        gap = (gap - 1) / 3;
+    }
+}
+// 时间复杂度小于平方，但无法得到具体数值
+```
+
+#### 分析
+
+希尔排序不是稳定的排序算法
+
+时间复杂度介于$O(n)$与$O(n^2)$之间，普遍认为最好的时间复杂度是$O(n^{1.3})$
+
+空间复杂度为$O(1)$
+
+
+
+希尔排序之所以能够打破空间复杂度$O(1)$的限制下，时间复杂度无法超过$O(n^2)$的魔咒，大致原因如下：
+
+**排序算法本质上就是一个消除逆序对的过程。**对于随机数组，逆序对的数量是$O(n^2)$级的，如果采用交换相邻元素的办法来消除逆序对，每次最多只能消除一组逆序对，因此必须执行$O(n^2)$级的交换次数，这就是为什么冒泡、插入、选择算法只能到$O(n^2)$级的原因。反过来说，基于交换元素的排序算法要想突破$O(n^2)$级，必须通过一些比较，交换间隔比较远的元素，使得一次交换能消除一个以上的逆序对
+
 
 
 
