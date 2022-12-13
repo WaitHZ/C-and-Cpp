@@ -545,7 +545,7 @@ void heapSort(int *arr, int size) {
 
 
 
-### 归并
+### 归并排序
 
 #### 合并两个有序列表
 
@@ -586,6 +586,87 @@ int* merge(int *arr1, int size1, int *arr2, int size2) {
 #### 归并实现排序
 
 ```c
+void merge(int *arr, int start, int end, int *res) {
+    int end1, start2, ptr1, ptr2, ptr;
+    
+    end1 = (end-start) / 2 + start;
+    start2 = end1 + 1;
+    
+    ptr = ptr1 = start; ptr2 = start2;
+    while(ptr1 <= end1 || ptr2 <= end) {
+        if(ptr1 <= end1 && ptr2 <= end) {
+            if(arr[ptr1] <= arr[ptr2]) {
+                res[ptr++] = arr[ptr1++];
+            }
+            else {
+                res[ptr++] = arr[ptr2++];
+            }
+        }
+        else if(ptr1 <= end1) {
+            res[ptr++] = arr[ptr1++];
+        }
+        else {
+            res[ptr++] = arr[ptr2++];
+        }
+    }
+    
+    for(ptr = start; ptr <= end; ptr++) {
+        arr[ptr] = res[ptr];
+    }
+}
 
+void MergeSort(int *arr, int start, int end, int *res) {
+    int mid;
+    
+    if(end > start) {
+        mid = (end-start) / 2 + start;
+        
+        MergeSort(arr, start, mid, res);
+        MergeSort(arr, mid+1, end, res);
+        
+        merge(arr, start, end, res);
+    }
+}
+
+void mergeSort(int *arr, int size) {
+    int *res;
+    
+    if(size <= 1) {
+        return ;
+    }
+    
+    res = (int*)malloc(sizeof(int)*size);
+    
+    MergeSort(arr, 0, size-1, res);
+    
+    free(res);
+}
+```
+
+**反复分配再释放临时的空间时间和内存开销都非常大**，因此从始至终公用一个临时数组是最好的办法。
+
+
+
+#### 分析
+
+**是否存在原地归并排序？**
+
+如果不借助其他内存空间，我们需要对merge函数做一定的修改：
+
+- 方式一：仍旧双指针遍历两个数组，将index1和index2两个指针指向的较小值放在index1的位置。如果这个数是index1所指向的，则不需要移动数组，只要index1右移即可；但若是index2则需要将[index1, index2)的所有元素有意一个单位，并将值放入index1的位置，index1、index2同时右移一次，相应的标识左数组结尾的end1也需要右移一个单位
+- 方式二：这种方式不改变左右两数组的尺寸，我们总是将index1和index2指向的较小值交换到index1的位置，调整交换到右数组值的位置，仍需保证右数组有序
+
+无论哪种方式，都只是借用了归并排序递归的思想，实际时间复杂度都达到了$O(n^2)$，效率很低
+
+**复杂度**
+
+时间复杂度为$\varTheta(nlogn)$，空间复杂度为$\varTheta(n)$
+
+**稳定性**
+
+merge函数中的$\le$保证了归并排序算法的稳定性
+
+```c
+if(ptr1 <= end1 && ptr2 <= end)
 ```
 
