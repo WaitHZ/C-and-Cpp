@@ -470,5 +470,122 @@ void shellSort(int *arr, int size) {
 
 
 
+### 堆排序
 
+堆排序基于堆的数据结构，需要用到两个堆中重要的操作：
+
+- 构建堆
+- 调整堆，使其仍满足堆的定义
+
+构建堆有两种方式：
+
+1. 依次向一个空堆中插入所有元素
+2. 将整个数组初始状态视作完全二叉树，自底向上调整树的结构
+
+将堆用于排序也要求我们数组索引从0开始使用，而不是1，此时完全二叉树具有如下性质：
+
+- 对于第$i$个数，其左孩子的索引为$left=2i+1$，右孩子的索引为$right=left+1$
+- 有$n$个元素的完全二叉树，最后一个非叶子节点的下标为$\frac{n}{2}-1$
+
+
+
+#### 实现代码
+
+```c
+void swap(int *arr, int i, int j) {
+    int tmp;
+    
+    tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+}
+
+void maxHeapify(int *arr, int size, int index) {
+    int max_index, left, right;
+    
+    max_index = index;
+    left = (index << 1) + 1;
+    right = left + 1;
+    
+	max_index = left < size && arr[left] > arr[max_index] ? left : max_index;
+    max_index = right < size && arr[right] > arr[max_index] ? right : max_index;
+    
+    if(max_index != index) {
+        swap(arr, index, max_index);
+        maxHeapify(arr, size, max_index);
+        // 递归，保证子树还是最大堆
+    }  
+}
+
+void buildMaxHeap(int *arr, int size) {
+    for(int i = (size >> 1) - 1; i >= 0; i--) {
+        maxHeapify(arr, size, i);
+    }
+}
+
+void heapSort(int *arr, int size) {
+    buildMaxHeap(arr, size);
+    
+    for(int i = 0; i < size; i++) {
+        swap(arr, 0, size-1-i);
+        maxHeapify(arr, size-1-i, 0);
+    }
+}
+```
+
+
+
+#### 分析
+
+堆排序不是稳定的算法
+
+数学可以证明，采用第二种构建最大堆方式的时间复杂度是$O(n)$，而调整最大堆的时间复杂度是$O(nlogn)$，因此堆排序总的时间复杂度为$O(nlogn)$
+
+空间复杂度为$O(1)$
+
+
+
+### 归并
+
+#### 合并两个有序列表
+
+充分利用两列表有序，在时间复杂度为$O(n)$的条件下实现合并
+
+```c
+int* merge(int *arr1, int size1, int *arr2, int size2) {
+    int *arr, ptr1, ptr2, ptr;
+    
+    arr = (int*)malloc(sizeof(int)*(size1+size2));
+    ptr = ptr1 = ptr2 = 0;
+    
+    while(ptr1 < size1 || ptr2 < size2) {
+        if(ptr1 < size1 && ptr2 < size2) {
+            if(arr1[ptr1] <= arr[ptr2]) {
+                arr[ptr++] = arr1[ptr1++];
+            }
+            else {
+                arr[ptr++] = arr2[ptr2++];
+            }
+        }
+        else if(ptr1 < size1) {
+            arr[ptr++] = arr1[ptr1++];
+        }
+        else {
+            arr[ptr++] = arr2[ptr2++];
+        }
+    }
+    
+    return arr;
+}
+```
+
+#### 将原数组递归拆分
+
+能够这么做的原因是一元数组一定有序
+
+#### 归并实现排序
+
+```c
+
+```
 
