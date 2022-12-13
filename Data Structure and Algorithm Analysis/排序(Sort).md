@@ -560,7 +560,7 @@ int* merge(int *arr1, int size1, int *arr2, int size2) {
     
     while(ptr1 < size1 || ptr2 < size2) {
         if(ptr1 < size1 && ptr2 < size2) {
-            if(arr1[ptr1] <= arr[ptr2]) {
+            if(arr1[ptr1] <= arr2[ptr2]) {
                 arr[ptr++] = arr1[ptr1++];
             }
             else {
