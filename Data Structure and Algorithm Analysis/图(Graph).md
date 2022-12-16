@@ -603,6 +603,108 @@ bool isConnected(int *root, int ind1, int ind2) {
 
 
 
+## 深度优先算法(DFS: Deep First Search)
+
+深度优先算法在图中的两个重要应用：
+
+- 遍历图中所有顶点
+- 遍历图中任意两顶点之间的所有路径
+
+深度有限，即在一条路上“死磕到底”
+
+### 遍历所有顶点
+
+借助栈先入后出，后入先出实现状态**回退**，但一般通过递归实现隐式的栈。
+
+使用邻接表对图进行存储，数据结构如下：
+
+```c
+typedef struct LNode *PtrToLNode;
+struct LNode {
+    int vertax;
+    int len;
+    PtrToLNode next;
+};
+
+struct GraphStruct {
+    int V, E;
+    PtrToLNode* LArr; 
+};
+typedef struct GraphStruct *Graph;
+
+typedef struct SNode *PtrToSNode;
+struct SNode {
+    int vertaxArr[MAXN];
+    int top;
+};
+typedef PtrToSNode Stack;
+
+Stack makeStack() {
+    Stack new_stack;
+    
+    new_stack = (Stack)malloc(sizeof(struct SNode));
+    new_stack->top = -1;
+    
+    return new_stack;
+}
+
+void push(Stack s, int ele) {
+    (s->vertaxArr)[++(s->top)] = ele;
+}
+
+int pop(Stack s) {
+    return (s->vertaxArr)[(s->top)--];
+}
+
+bool isEmptyStack(Stack s) {
+    return s->top == -1;
+}
+```
+
+```c
+void traverseByDFS(Graph g) {
+    int *haveTraversed, vertax;
+    Stack s;
+    PtrToLNode ptr;
+    
+    haveTraversed = (int*)malloc(sizeof(int)*(g->V));
+    for(int i = 0; i < g->V; i++) {
+        haveTraversed = 0;
+    }
+    
+    s = makeStack();
+    
+    push(s, 0);
+    while(!isEmptyStack(s)) {
+        vertax = pop(s);
+        haveTraversed[verta]
+        
+        if(haveTraversed[vertax] == 0) {
+            printf("%d ", vertax);  // 遍历操作，这里使用输出代替
+        }
+        
+        ptr = (g->LArr)[vertax];
+        
+        while(ptr) {
+            push(s, ptr->vertax);
+            ptr = ptr->next;
+        }
+    }
+}
+```
+
+**时间复杂度：**$O(V+E)$
+
+**空间复杂度:** $O(V)$
+
+### 遍历图中两顶点的所有路径
+
+以邻接矩阵编写如下代码：
+
+
+
+
+
 ## 拓扑排序Khan算法
 
 经典的例子就是课程关系图，某些课程是另一些课程基础课程，必须先学完基础课程才能读高级课程。
