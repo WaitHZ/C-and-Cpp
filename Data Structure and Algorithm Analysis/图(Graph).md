@@ -552,7 +552,7 @@ root = (int*)malloc(sizeof(int)*size);
 rank = (int*)malloc(sizeof(int)*size);
 
 // 时间复杂度O(n)
-void init(int *root, int *rank) {
+void init(int *root, int *rank, int size) {
     for(int i = 0; i < size; i++) {
         root[i] = i;
         rank[i] = 1;
@@ -572,7 +572,7 @@ int find(int *root, int ind) {
     return r;
 }
 
-void union(int *root, int *rank, int ind) {
+void union(int *root, int *rank, int ind1, int ind2) {
     int root1, root2;
     
     root1 = find(root, ind1);
@@ -610,98 +610,220 @@ bool isConnected(int *root, int ind1, int ind2) {
 - 遍历图中所有顶点
 - 遍历图中任意两顶点之间的所有路径
 
-深度有限，即在一条路上“死磕到底”
+深度优先，即在一条路上“死磕到底”
 
 ### 遍历所有顶点
 
-借助栈先入后出，后入先出实现状态**回退**，但一般通过递归实现隐式的栈。
+借助栈先入后出，后入先出实现状态**回退**，但一般通过**递归**实现隐式的栈。
 
-使用邻接表对图进行存储，数据结构如下：
+我们需要记住的的是，算法DFS在处理时，需要区分图是否为有向无环图(Directed Acyclic Graph)，对于有向无环图递归时并不需要记录已经访问的节点（树的递归遍历就是典型的有向无环图），而对于有环、无向的图，就需要纪录已经访问的节点。
+
+**有向无环图**
 
 ```c
-typedef struct LNode *PtrToLNode;
-struct LNode {
-    int vertax;
-    int len;
-    PtrToLNode next;
-};
-
-struct GraphStruct {
-    int V, E;
-    PtrToLNode* LArr; 
-};
-typedef struct GraphStruct *Graph;
-
-typedef struct SNode *PtrToSNode;
-struct SNode {
-    int vertaxArr[MAXN];
-    int top;
-};
-typedef PtrToSNode Stack;
-
-Stack makeStack() {
-    Stack new_stack;
+// 为简单实用邻接矩阵存储图
+void dfs(int **graph, int graphSize, int vertax) {
+    for(int i = 0; i < graphSize; i++) {
+        if(graph[vertax][i]) {
+            dfs(graph, graphSize, graph[vertax][i]);
+        }
+    }
     
-    new_stack = (Stack)malloc(sizeof(struct SNode));
-    new_stack->top = -1;
-    
-    return new_stack;
+    printf("%d ", vertax);  // 得到的输出序列是反拓扑序的
 }
 
-void push(Stack s, int ele) {
-    (s->vertaxArr)[++(s->top)] = ele;
-}
-
-int pop(Stack s) {
-    return (s->vertaxArr)[(s->top)--];
-}
-
-bool isEmptyStack(Stack s) {
-    return s->top == -1;
+void TraversedByDFS(int **graph, int graphSize) {
+    dfs(graph, graphSize, 0);
 }
 ```
 
+**时间复杂度：**$O(V+E)$，每个点和每条边都需要被访问
+
+**空间复杂度:** $O(1)$，并不需要额外的存储空间
+
+**非有向无环图**
+
 ```c
-void traverseByDFS(Graph g) {
-    int *haveTraversed, vertax;
-    Stack s;
-    PtrToLNode ptr;
+void dfs(int **graph, int graphSize, int vertax, int *haveTraversed) {
+    haveTraversed[vertax] = 1;
     
-    haveTraversed = (int*)malloc(sizeof(int)*(g->V));
-    for(int i = 0; i < g->V; i++) {
-        haveTraversed = 0;
-    }
-    
-    s = makeStack();
-    
-    push(s, 0);
-    while(!isEmptyStack(s)) {
-        vertax = pop(s);
-        haveTraversed[verta]
-        
-        if(haveTraversed[vertax] == 0) {
-            printf("%d ", vertax);  // 遍历操作，这里使用输出代替
-        }
-        
-        ptr = (g->LArr)[vertax];
-        
-        while(ptr) {
-            push(s, ptr->vertax);
-            ptr = ptr->next;
+    for(int i = 0; i < graphSize; i++) {
+        if(graph[vertax][i] && haveTraversed[i] == 0) {
+            dfs(graph, graphSize, graph[vertax][i], haveTraversed);
         }
     }
 }
+
+void TraverseByDFS(int **graph, int graphSize) {
+    int *haveTraversed;
+    
+    haveTraversed = (int*)malloc(sizeof(int)*graphSize);
+    for(int i = 0; i < graphSize; i++) {
+        haveTraversed[i] = 0;
+    }
+    
+    dfs(graph, graphSize, 0, haveTraversed);
+    
+    free(haveTraversed);
+}
 ```
 
-**时间复杂度：**$O(V+E)$
+**时间复杂度：**$O(V+E)$，每个点和每条边都需要被访问
 
-**空间复杂度:** $O(V)$
+**空间复杂度:** $O(V)$，需要额外的数组记录每个节点是否被访问。
 
 ### 遍历图中两顶点的所有路径
 
-以邻接矩阵编写如下代码：
+仍然需要区分有向无环图和其他图，对于有向无环图，我们并不需要记录节点是否被访问，只需要记录路径即可。
+
+**有向无环图**
+
+```c
+#define MAXN 50000
+
+void dfs(int **graph, int graphSize, int *colSizes, int vertax, int end, int *path, int pathSize, int **Paths, int *pathColSizes, int *pathCount) {
+    if(vertax == end) {
+        Paths[*pathCount] = (int*)malloc(sizeof(int)*graphSize);
+        
+        for(int i = 0; i < pathSize; i++) {
+            Paths[*pathCount][i] = path[i];
+        }
+        Paths[*pathCount][pathSize] = end;
+        pathColSizes[*pathCount] = ++pathSize;
+        
+        *pathCount += 1;
+    }
+    else {
+        path[pathSize++] = vertax;
+        
+        for(int i = 0; i < colSizes[vertax]; i++) {
+            int *path_copy;
+            path_copy = (int*)malloc(sizeof(int)*graphSize);
+            memcpy(path_copy, path, sizeof(int)*graphSize);
+            
+            dfs(graph, graphSize, colSizes, graph[vertax][i], end, path_copy, pathSize, Paths, pathColSizes, pathCount);
+
+            free(path_copy);
+        }
+    }
+}
+
+int **allPaths(int **graph, int graphSize, int *colSizes, int start, int end, int *pathCount, int **pathColSizes) {
+    int **Paths, *path;
+    
+    Paths = (int**)malloc(sizeof(int*)*MAXN);
+    *pathColSizes = (int*)malloc(sizeof(int)*MAXN);
+    *pathCount = 0;
+    
+    path = (int*)malloc(sizeof(int)*graphSize);
+    
+    dfs(graph, graphSize, colSizes, 0, graphSize-1, path, 0,  Paths, *pathColSizes, pathCount);
+    
+    free(path);
+    
+    return Paths;
+}
+```
+
+**时间复杂度为$O((2^V)\times (V+E))$**
+
+**空间复杂度为$O(2^V\times V)$**
+
+对于其他图，只需要除了path记录路径外，另需要一个数组记录已经访问过的节点，避免重复的边走多次。
 
 
+
+### 强连通子图的拆分
+
+借助DFS算法可以实现强连通路径的拆分
+
+**强连通：**图中任意两个节点$i$和$j$，均有从$i$到$j$的路径，也有从$j$到$i$的路径
+
+实用dfs算法判断是否存在路径（注意避免环，借助数组记录是否已经被访问）
+
+
+
+## 欧拉路径
+
+
+
+
+
+## 广度优先算法
+
+
+
+
+
+## 最小生成树
+
+**生成树**：在无向图中，具有该图全部顶点且边数最少的连通子图。如下图所示：
+
+<img src='./img/Graph10.jpg' style='width: 500px'>
+
+红色标注的就是其生成树，同理[(A, E), (A, B), (B, C), (C, D)]也是生成树，因此图的生成树不唯一
+
+**最小生成树**：加权无向图中总权最小的生成树。如下图所示：
+
+![](./img/Graph11.jpg)
+
+图中绿色标注的就是图的最小生成树，但同样[(A, E), (E, D), (A, B), (B, C)]也是最小生成树，因此最小生成树不唯一
+
+### 切分定理
+
+- 切分：将图切成两个部分
+- 横切边：一条边连接的顶点属于切分的两个部分
+
+<img src='./img/Graph12.jpg'>
+
+切分定理：
+
+> 在一幅加权无向图中，给定任意的切分，如果有一条横切边的权值严格小于所有其他横切边，则这条边必属于图中最小生成树的一条边
+
+**证明：**
+
+一条：保证切分的两部分存在连通，避免环的形成，使之不再是树
+
+最小：目的是找到最小生成树
+
+### Kruskal算法
+
+中心思想：加入不构成环的最小边
+
+1. 将所有边按权重从小到大排序
+2. 依次加入最小生成树中形成环则跳过
+3. 直到选择$N-1$条边为止
+
+**贪心思想**：每次都选择不形成环的最小边
+
+
+
+实现：核心难点在于判断加入某条边后是否会存在环，本质也是连通性的判断，可以借助并查集实现
+
+可以参见LeetCode 1584 **Kruskal**算法解决
+
+
+
+**时间复杂度**：$O(ElogE)$，**空间复杂度**：$O(V)$
+
+
+
+### Prim算法
+
+- 两个集合：一个存已访问的节点，一个存未访问的节点
+- 将已有的集合看作整体，选取与外界连接边的最小边作为新的边
+
+仍使用了贪心的思想，通过切分定理即可证明
+
+
+
+
+
+
+
+**时间复杂度**：普通二叉堆$O(ElogV)$，斐波那契堆$O(ElogV)$
+
+**空间复杂度**：$O(V)$
 
 
 
@@ -726,3 +848,8 @@ void traverseByDFS(Graph g) {
 ### 复杂度
 
 时间与空间复杂度均为$O(V+E)$
+
+
+
+## 网络流问题
+
