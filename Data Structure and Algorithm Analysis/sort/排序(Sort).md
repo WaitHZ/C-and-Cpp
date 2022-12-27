@@ -545,6 +545,168 @@ void heapSort(int *arr, int size) {
 
 
 
+### 快速排序
+
+实际使用中是几个$O(nlogn)$排序中效率最高的，其基本思想为：
+
+- 从数组中取出一个数，称之为基数(pivot)
+- 遍历数组，将比基数大的数字放在其右边，比基数小的数字放在基数左边。遍历完成后，数组被分成两个区域
+- 将左右两个区域视为两个数组，重复前两个步骤，直到排序完成
+
+每一次排序都是将基数放在了正确的地方，第一轮放好1个，第二轮2个，第三轮4个，以此类推，但如果数组为空，则对于 基数无贡献，即为最坏的情况，因此时间复杂度为$O(nlogn)-O(n^2)$，平均时间复杂度为$O(nlogn)$
+
+#### 快排的基本框架
+
+依据思想，搭建基本框架：
+
+```c
+ElementType partition(ElementType *arr, Position start, Position end) {
+
+}
+
+void QuickSort(ElementType *arr, Position start, Position end, int (*compare)(ElementType a, ElementType b)) {
+    int mid;
+
+    mid = partition(arr, start, end);
+
+    QuickSort(arr, start, mid-1, compare);
+    QuickSort(arr, mid+1, end, compare);
+}
+
+void quickSort(ElementType *arr, int arrSize, int (*compare)(ElementType a, ElementType b)) {
+    QuickSort(arr, 0, arrSize-1, compare);
+}
+```
+
+#### 何时结束递归
+
+当某个区域只剩一个数字或没有数字时，就应该结束继续递归
+
+```c
+void QuickSort(ElementType *arr, Position start, Position end, int (*compare)(ElementType a, ElementType b)) {
+    int mid;
+
+    if(start < end) {
+        mid = partition(arr, start, end);
+
+        QuickSort(arr, start, mid-1, compare);
+        QuickSort(arr, mid+1, end, compare);
+    }
+}
+```
+
+但由于mid的计算方法，$start >= end$仅存在相等和差为1两种情况
+
+#### 分区算法的实现
+
+一般有三种选择选择基数(pivot)的方式:
+
+- 选取第一个元素
+- 选取最后一个元素
+- 选取任意元素
+
+其中第三种算法的平均时间复杂度最优，但实现的代码采用第一种方式
+
+分区算法也存在着两种写法
+
+```c
+ElementType partition(ElementType *arr, Position start, Position end, int (*compare)(ElementType a, ElementType b)) {
+    int pivot, left, right;
+
+    pivot = arr[start];
+    left = start + 1;
+    right = end;
+
+    while(left < right) {
+        while(left < right && compare(arr[left], pivot) <= 0) {
+            left += 1;
+        }
+
+        if(left != right) {
+            ElementType tmp;
+
+            tmp = arr[left];
+            arr[left] = arr[right];
+            arr[right] = tmp;
+
+            right -= 1;
+        }
+    }
+
+    if(left == right && compare(arr[right], pivot) > 0) {
+        right -= 1;
+    }
+    if(right != start) {
+        ElementType tmp;
+
+        tmp = arr[start];
+        arr[start] = arr[right];
+        arr[right] = tmp;
+    }
+
+    return right;
+}
+```
+
+更为常见的是下面这种写法：
+
+```c
+ElementType partition(ElementType *arr, Position start, Position end, int (*compare)(ElementType a, ElementType b)) {
+    int pivot;
+    Position left, right;
+    ElementType tmp;
+
+    pivot = arr[start];
+    left = start + 1;
+    right = end;
+
+    while(left < right) {
+        while(left < right && compare(arr[left], pivot) <= 0) {
+            left += 1;
+        }
+
+        while(right > left && compare(arr[right], pivot) >= 0) {
+            right -= 1;
+        }
+
+        if(left != right) {
+            tmp = arr[left];
+            arr[left] = arr[right];
+            arr[right] = tmp;
+
+            right -= 1;
+            left += 1;
+        }
+    }
+
+    if(left == right && compare(arr[right], pivot) > 0) {
+        right -= 1;
+    }
+
+    tmp = arr[start];
+    arr[start] = arr[right];
+    arr[right] = tmp;
+
+    return right;
+}
+```
+
+#### 分析
+
+排序算法并**不是稳定的排序算法**
+
+时间复杂度为$O(nlogn)-O(n^2)$，平均为$O(nlogn)$，空间复杂度为$O(logn)-O(n)$，平均为$O(logn)$
+
+快排最坏的情况就是选取第一个元素作为pivot，但是数组本身有序，为了避免这一问题，可以做如下优化
+
+- 选取随机元素作为pivot
+- 将原数组顺序打乱
+- 对于数组是否有序做判断
+
+实践来看，将1、3两种方法结合使用，仅在数组较大时，判断原数组是否有虚
+
+
+
 ### 归并排序
 
 #### 合并两个有序列表
@@ -669,4 +831,224 @@ merge函数中的$\le$保证了归并排序算法的稳定性
 ```c
 if(ptr1 <= end1 && ptr2 <= end)
 ```
+
+
+
+## 时间复杂度为$O(n)$的排序算法
+
+### 计数排序
+
+计数排序的核心就是对一定范围的数据排序。
+
+#### 伪计数排序
+
+如果需要对一列数组排序，这个数组中每个元素都是$[1,9]$区间内的整数。那么我们可以构建一个长度为$9$的数组用于计数，计数数组的下标分别对应区间内的9个整数。然后遍历待排序的数组，将区间内每个整数出现的次数统计到计数数组中对应下标的位置。最后遍历计数数组，将每个元素输出，输出的次数就是对应位置记录的次数。
+
+算法非常简单，用于纯数学排序也不存在问题，但用这种方式排序，我们无法得到属于原对象的任何信息。比如对于商品价格进行排序，我们只能拿到排序的结果，却不再知道某个价格对应什么商品
+
+#### 伪计数排序2.0
+
+为了解决上面的问题，我们可以将计数的数组换为一个能够存储对象的队列数组，最后输出时利用队列的FIFO特性还可以保证排序的稳定性
+
+#### 真 计数排序
+
+理论上计数排序可以适用于任何整形指标的排序，计数排序的执行流程为：
+
+1. 遍历数组，确定最大值max和最小值min，并开辟大小为$max-min+1$的count数组
+2. 遍历数组，统计范围内各值出现的数目
+3. 将count数组内转化为索引所对应的元素下标
+4. 开辟等大的额外数组，将数组按照count记录的索引进行放置，并时刻调整记录的索引值
+5. 将额外数组的值写回原数组
+
+有多种方式完成步骤3，我们采用效率更高的倒序遍历，实现代码如下：
+
+```c
+typedef int ElementType;
+
+int getIntVal(ElementType a) {
+    return a;
+}
+
+void countingSort(ElementType *arr, int arrSize, int(*getIntVal)(ElementType a)) {
+    int max, min, *count, *res;
+
+    max = min = getIntVal(arr[0]);
+    for(int i = 0; i < arrSize; i++) {
+        if(getIntVal(arr[i]) > max) {
+            max = getIntVal(arr[i]);
+        }
+        if(getIntVal(arr[i]) < min) {
+            min = getIntVal(arr[i]);
+        }
+    }
+
+    count = (int*)malloc(sizeof(int)*(max-min+1));
+    memset(count, 0, sizeof(int)*(max-min+1));
+
+    for(int i = 0; i < arrSize; i++) {
+        count[getIntVal(arr[i])-min] += 1;
+    }
+
+    count[0] -= 1;
+    for(int i = 1; i < max-min+1; i++) {
+        count[i] += count[i-1];
+    }
+
+    res = (int*)malloc(sizeof(ElementType)*arrSize);
+    for(int i = arrSize-1; i >= 0; i--) {
+        res[count[getIntVal(arr[i])-min]] = arr[i];
+        count[getIntVal(arr[i])-min] -= 1;
+    }
+
+    for(int i = 0; i < arrSize; i++) {
+        arr[i] = res[i];
+    }
+
+    free(res);
+    free(count);
+}
+```
+
+#### 分析
+
+最后的倒序遍历保证了排序算法的**稳定性**
+
+时间、空间复杂度均为$O(n+k)$，$k$表示数据范围的大小
+
+因此，计数排序只适用于那些数据范围跨度不大的整形数组（或对象的整形属性）
+
+处理仅有一位的小数，可以使用$\times 10$的办法
+
+> 计数排序之所以可以突破$O(nlogn)$的限制，是因为其并不是基于比较，而是基于数组本身的属性
+
+基于比较的排序最好的时间复杂度为$O(nlogn)$
+
+
+
+### 基数排序
+
+基数排序和计数排序类似，只能处理整数的数组，基本思想类似于对日期进行排序，先对年进行排序，再对月排序，最后对日排序。对于一个整数数组运用这种思想，逐位比较基数的大小，循环最大数字位数轮后，即可完成排序。依据基数的顺序，可以分为
+
+- 最高位优先法MSD
+- 最低位优先发LSD
+
+一般而言LSD排序的方式更为常用，但相应的要求对于基数的排序必循采用稳定算法，而MSD则可以不采用稳定的排序算法
+
+基数排序的流程分为三个步骤：
+
+- 找出数组中最大的数字位数maxDigitLength
+- 获取数组中每个数字的基数
+- 遍历maxDigitLength轮数组，每轮按照基数对其进行排序
+
+对于任意的整数，找出最大的数字位数可以通过绝对值最大的数进行获取
+
+```c
+	for(int i = 0; i < arrSize; i++) {
+        if(absVal(getIntVal(arr[i])) > max) {
+            max = absVal(getIntVal(arr[i]));
+        }
+    }
+
+    maxDigitLength = 0;
+    while(max) {
+        maxDigitLength += 1;
+        max /= 10;
+    }
+```
+
+获取基数后，应该采用稳定的排序算法，且可以取到的值仅有$-9—9$（负数是为了解决非负整数而设计），采用计数排序，完整代码如下：
+
+```c
+void radixSort(ElementType *arr, int arrSize, int(*getIntVal)(ElementType a)) {
+    int max = 0, maxDigitLength, count[19], dev, radix;
+    ElementType *res;
+    
+    for(int i = 0; i < arrSize; i++) {
+        if(absVal(getIntVal(arr[i])) > max) {
+            max = absVal(getIntVal(arr[i]));
+        }
+    }
+
+    maxDigitLength = 0;
+    while(max) {
+        maxDigitLength += 1;
+        max /= 10;
+    }
+
+    res = (ElementType*)malloc(sizeof(ElementType)*arrSize);
+    dev = 1;
+    for(int i = 0; i < maxDigitLength; i++) {
+        memset(count, 0, sizeof(int)*19);
+        for(int j = 0; j < arrSize; j++) {
+            radix = getIntVal(arr[j]) / dev % 10;
+            count[radix+9] += 1;
+        }
+
+        count[0] -= 1;
+        for(int j = 1; j < 19; j++) {
+            count[j] += count[j-1];
+        }
+
+        for(int j = arrSize-1; j >= 0; j--) {
+            radix = getIntVal(arr[j]) / dev % 10;
+            res[count[getIntVal(arr[j])/dev%10+9]] = arr[j];
+            count[getIntVal(arr[j])/dev%10+9] -= 1;
+        }
+
+        memcpy(arr, res, sizeof(ElementType)*arrSize);
+        dev *= 10;
+    }
+    
+    free(res);
+}
+```
+
+这里是一个一般的情况，即对于任意整数进行排序，如果只是对于非负整数进行排序，还可以取得更高的效率
+
+**MSD的操作十分复杂**，不再赘述
+
+#### 分析
+
+空间复杂度与计数排序相同，均为$O(n+k)$，对于非负整数排序$k=10$，任意整数则是$k=19$
+
+时间复杂度为$O(d(n+k))$，$d$为最长的数字位数
+
+
+
+### 桶排序
+
+桶排序的思想是：
+
+- 将区间划分为$n$个相同大小的子区间，每个子区间称为一个桶
+- 遍历数组，将每个数字装入桶中
+- 对每个桶内的数字单独排序，这里需要采用其他排序算法，如插入、归并、快排等
+- 最后按照顺序将所有桶内的数字合并起来
+
+桶排序的高效基于数据均匀分布在各个区间，在分布极度不均时，只是徒增了外层循环，因此在桶排序问题中需要关注两个问题：
+
+- **桶的数量**：桶的数量过少，会导致单个桶内的数字过多，桶排序的时间复杂度就会在很大程度上受桶内排序算法的影响。桶的数量过多，占用的内存就会较大，并且会出现较多的空桶，影响遍历桶的效率
+- **桶的数据结构：**如果将桶的数据结构设置为数组，那么每个桶的长度必须设置为待排序数组的长度，因为我们需要做好最坏的打算，即所有的数字都被装入了同一个桶中，所以这种方案的空间复杂度会很高。而使用链表有一个好处，即所有桶的总长度刚好等于待排序数组的长度，不会造成内存浪费，但链表排序相较于数组难以操作，且开销更大
+
+桶排序的执行流程：
+
+1. 遍历数组找到数组的最大值和最小值，并设置桶的数量
+
+2. 遍历数组，将每个数据按照划分装桶
+3. 对于每个桶内的数据进行排序，借助其他排序算法
+4. 将每个桶中的数据整合回原数组
+
+当使用**数组**作为数据结构时，每个桶都需要和原数组等大，造成了大量的空间浪费，使用动态数组又会增加很多额外的**时间开销**，相当于以时间换空间；而使用链表作为数据结构，虽然可以节约空间，但对于链表的排序会很耗时；可以采用折中的方式，装桶时用链表，排序时用数组，但是将链表转化为数组会增加额外的$O(n)$的时间复杂度和空间复杂度，因此总结如下：
+
+- 以数组作为桶，初始化每个桶的长度为$n$：时间上做到了最好，但空间占用很高
+- 以数组作为桶，初始化每个桶的长度为$0$：空间上做到了最好，但装桶时对数组扩容比较耗时
+- 以链表作为桶：空间上做到了最好，并且装桶时无需扩容，但对链表排序比较耗时
+- 装桶时采用链表，排序时采用数组：时间和空间上都是一种折中的方案，但 链表 转换数组的过程需要遍历一次数组，增加了$O(n)$的时间，转换后会占用$O(n)$的空间
+
+#### 分析
+
+在满足均匀分布的前提下，时间复杂度为$O(n)$，空间复杂度与数据结构有关，若采用后三种方式为$O(n)$
+
+桶排序相较于之前的两种线性时间复杂度的排序，是第一个可以用于浮点数的排序，但均匀分布的条件也相对较为ke'ke
+
+
 
