@@ -572,7 +572,7 @@ int find(int *root, int ind) {
     return r;
 }
 
-void union_b(int *root, int *rank, int ind1, int ind2) {
+void union_by_rank(int *root, int *rank, int ind1, int ind2) {
     int root1, root2;
     
     root1 = find(root, ind1);
@@ -824,6 +824,60 @@ int **allPaths(int **graph, int graphSize, int *colSizes, int start, int end, in
 **时间复杂度**：普通二叉堆$O(ElogV)$，斐波那契堆$O(ElogV)$
 
 **空间复杂度**：$O(V)$
+
+
+
+## 单源最短路算法
+
+### Dijkstra算法
+
+> 用于解决加权有向图**单源最短路径**问题，图中所有权重必须非负
+
+算法基于贪心的思想，流程如下：
+
+- Dijkstra算法从指定的节点（源节点）出发，寻找它与图中所有其它节点之间的最短路径
+- Dijkstra算法会记录当前已知的最短路径，并在寻找到更短的路径时更新
+- 一旦找到源节点与其他节点之间的最短路径，那个节点会被标记为“已访问”并添加到路径中
+- 重复寻找过程，直到图中所有节点都已经添加到路径中。这样，就可以得到从源节点出发访问所有其他节点的最短路径方案
+
+伪代码如下：
+
+```c
+void Dijkstra(Vertax s) {
+    while(true) {
+        V = 未收录顶点中dist的最小者;  // 时间复杂度决定因素1
+        if(这样的V不存在) {
+            break;
+        }
+        collected[V] = true;
+        
+        for(V的每个邻接点W) {
+            if(collected[W] == false) {
+                if(dist[V] + E(V, W) < dist[W]) {
+                    dist[W] = dist[V] + E(V, W);  // 时间复杂度决定因素2
+                    path[W] = V;
+                }
+            }
+        }
+    }
+}
+```
+
+需要初始化三个数组：
+
+- collected[]：代表点是否被收录，所有元素初始化为false
+- dist[]：代表最短路径，全部初始化为正无穷，再将源节点设为0，源节点的邻接点设为相应的权重
+- path[]：用于记录上一个节点，初始化为-1
+
+#### 分析
+
+**图中不存在负权边是算法有用的必要条件**
+
+空间复杂度为$O(V)$，时间复杂度因实现方式的不同而不同：
+
+- 若仅采用数组，在时间复杂度决定因素1处遍历的时间复杂度为$O(V)$，决定因素2的复杂度为$O(1)$. 总的时间复杂度为$O(V^2+E)$
+- 若采用二叉堆实现的最小堆，决定因素1、2处的复杂度均为$O(logV)$，总的时间复杂度为$O(VlogV+ElogV)$
+- 若采用斐波那契堆，时间复杂度为$O(E+VlogV)$
 
 
 
