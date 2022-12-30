@@ -6,18 +6,18 @@
 
 最接近生活的一种数据结构，如生活中的关系图：
 
-<img src='./img/Graph01.jpg'>
+<img src='../img/Graph01.jpg'>
 
 ### 类型
 
 - 无向图：图中任意两个顶点的边没有方向，如上方的朋友关系图
 - 有向图：图中任意两个顶点之间的边有方向，如：
 
-<img src='./img/Graph02.jpg' style='width: 500px'>
+<img src='../img/Graph02.jpg' style='width: 500px'>
 
 - 加权图：图中的每条边都带有一个相关的权重。权重可以是任何一种数量，如时间、距离、尺寸等。如下方的地图，可以将距离视作权重：
 
-<img src='./img/Graph03.jpg'>
+<img src='../img/Graph03.jpg'>
 
 ### 定义和相关术语
 
@@ -43,11 +43,11 @@
 
 为图中的顶点编号，使用bool型二维数组来存储下方的图：
 
-<img src='./img/Graph04.jpg' style='height: 500px'>
+<img src='../img/Graph04.jpg' style='height: 500px'>
 
 对应的二维数组（邻接矩阵）为：
 
-<img src='./img/Graph05.jpg'>
+<img src='../img/Graph05.jpg'>
 
 *空即表示false。
 
@@ -114,11 +114,11 @@ table[i][j] = table[j][i] = true;
 
 仍以下图为例：
 
-<img src='./img/Graph04.jpg' style='height: 500px'>
+<img src='../img/Graph04.jpg' style='height: 500px'>
 
 借助$n$个链表，其中第$i$个链表只存储第$i$个节点直接指向的节点，可以得到下方的邻接表：
 
-<img src='./img/Graph06.jpg'>
+<img src='../img/Graph06.jpg'>
 
 链表的节点定义为结构体：
 
@@ -422,7 +422,7 @@ bool isConnected(int *root, int ind1, int ind2) {
 
 前面更为高效的Quick Union中，提到的最坏情况就是下图这种退化为线性的结构：
 
-<img src='./img/Graph07.jpg' style='height: 500px'>
+<img src='../img/Graph07.jpg' style='height: 500px'>
 
 **秩：**通俗来说就是树的高度（注意与深度进行区分）。
 
@@ -572,7 +572,7 @@ int find(int *root, int ind) {
     return r;
 }
 
-void union(int *root, int *rank, int ind1, int ind2) {
+void union_b(int *root, int *rank, int ind1, int ind2) {
     int root1, root2;
     
     root1 = find(root, ind1);
@@ -599,7 +599,7 @@ bool isConnected(int *root, int ind1, int ind2) {
 
 后三个函数的时间复杂度为$\alpha(n)$
 
-<img src='./img/Graph08.jpg'>
+<img src='../img/Graph08.jpg'>
 
 
 
@@ -759,13 +759,13 @@ int **allPaths(int **graph, int graphSize, int *colSizes, int start, int end, in
 
 **生成树**：在无向图中，具有该图全部顶点且边数最少的连通子图。如下图所示：
 
-<img src='./img/Graph10.jpg' style='width: 500px'>
+<img src='../img/Graph10.jpg' style='width: 500px'>
 
 红色标注的就是其生成树，同理[(A, E), (A, B), (B, C), (C, D)]也是生成树，因此图的生成树不唯一
 
 **最小生成树**：加权无向图中总权最小的生成树。如下图所示：
 
-![](./img/Graph11.jpg)
+![](../img/Graph11.jpg)
 
 图中绿色标注的就是图的最小生成树，但同样[(A, E), (E, D), (A, B), (B, C)]也是最小生成树，因此最小生成树不唯一
 
@@ -774,7 +774,7 @@ int **allPaths(int **graph, int graphSize, int *colSizes, int start, int end, in
 - 切分：将图切成两个部分
 - 横切边：一条边连接的顶点属于切分的两个部分
 
-<img src='./img/Graph12.jpg'>
+<img src='../img/Graph12.jpg'>
 
 切分定理：
 
@@ -831,7 +831,7 @@ int **allPaths(int **graph, int graphSize, int *colSizes, int start, int end, in
 
 经典的例子就是课程关系图，某些课程是另一些课程基础课程，必须先学完基础课程才能读高级课程。
 
-<img src='./img/Graph09.jpg'>
+<img src='../img/Graph09.jpg'>
 
 修读C必须先学习B，而修读B又必须先学习A课程
 
