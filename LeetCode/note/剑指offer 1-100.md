@@ -358,3 +358,24 @@ int reversePairs(int* nums, int numsSize){
 }
 ```
 
+
+
+## 55-Ⅰ.二叉树的深度(简单)
+
+https://leetcode.cn/problems/er-cha-shu-de-shen-du-lcof/description/
+
+```c
+int maxDepth(struct TreeNode* root){
+    int depth, left_depth, right_depth;
+    
+    depth = 0;
+    if(root) {
+        left_depth = maxDepth(root->left);
+        right_depth = maxDepth(root->right);
+        depth = left_depth > right_depth ? left_depth + 1 : right_depth + 1;
+    }
+
+    return depth;
+}
+```
+
