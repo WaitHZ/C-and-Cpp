@@ -228,6 +228,121 @@ int numWays(int n){
 
 
 
+## 31.栈的压入、弹出序列(中等)
+
+https://leetcode.cn/problems/zhan-de-ya-ru-dan-chu-xu-lie-lcof/description/
+
+```c
+typedef int ElementType;
+typedef int Position;
+
+typedef struct {
+    ElementType *stackArr;
+    Position top;
+    int capacity;
+} Stack;
+
+Stack *makeNewStack(int size) {
+    Stack *newStack;
+
+    newStack = (Stack*)malloc(sizeof(Stack));
+    newStack->top = -1;
+    newStack->stackArr = (ElementType*)malloc(sizeof(ElementType)*size);
+    newStack->capacity = size;
+
+    return newStack;
+}
+
+bool isEmptyStack(Stack *s) {
+    return s->top == -1;
+}
+
+bool isFullStack(Stack *s) {
+    return s->top + 1 == s->capacity;
+}
+
+void push(Stack *s, ElementType val) {
+    if(!isFullStack(s)) {
+        (s->stackArr)[++s->top] = val;
+    }
+    else {
+        printf("Stack is full!\n");
+        abort();
+    }
+}
+
+ElementType pop(Stack *s) {
+    if(isEmptyStack(s)) {
+        printf("Stack is empty!\n");
+        abort();
+    }
+    
+    return (s->stackArr)[(s->top)--];
+}
+
+ElementType getTopEle(Stack *s) {
+    if(isEmptyStack(s)) {
+        printf("Stack is empty!\n");
+        abort();
+    }
+    
+    return (s->stackArr)[s->top];
+}
+
+void freeStack(Stack *s) {
+    free(s->stackArr);
+    free(s);
+}
+
+bool validateStackSequences(int* pushed, int pushedSize, int* popped, int poppedSize){
+    int HashMap[1000];
+    bool *havePushed;
+    Stack *s;
+    bool isValid;
+
+    for(int i = 0; i < 1000; i++) {
+        HashMap[i] = -1;
+    }
+
+    for(int i = 0; i < pushedSize; i++) {
+        HashMap[pushed[i]] = i;
+    }
+
+    s = makeNewStack(poppedSize);
+    isValid = true;
+    havePushed = (bool*)malloc(sizeof(bool)*pushedSize);
+    memset(havePushed, 0, sizeof(bool)*pushedSize);
+    for(int i = 0; i < poppedSize; i++) {
+        if(isEmptyStack(s)) {
+            for(int j = 0; j <= HashMap[popped[i]]; j++) {
+                push(s, j);
+                havePushed[j] = true;
+            }
+            pop(s);
+        }
+        else {
+            if(HashMap[popped[i]] < getTopEle(s)) {
+                isValid = false;
+                break;
+            }
+            else {
+                for(int j = getTopEle(s); j <= HashMap[popped[i]]; j++) {
+                    if(!havePushed[j]) {
+                        havePushed[j] = true;
+                        push(s, j);
+                    }
+                }
+                pop(s);
+            }
+        }
+    }
+
+    return isValid;
+}
+```
+
+
+
 ## 40.最小的k个数(简单)
 
 https://leetcode.cn/problems/zui-xiao-de-kge-shu-lcof/description/

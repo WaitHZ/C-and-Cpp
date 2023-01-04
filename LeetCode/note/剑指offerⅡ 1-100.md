@@ -2,6 +2,128 @@
 
 
 
+## 36.后缀表达式(中等)
+
+https://leetcode.cn/problems/8Zf90G/description/
+
+```c
+typedef int ElementType;
+typedef int Position;
+
+typedef struct {
+    ElementType *stackArr;
+    Position top;
+    int capacity;
+} Stack;
+
+Stack *makeNewStack(int size) {
+    Stack *newStack;
+
+    newStack = (Stack*)malloc(sizeof(Stack));
+    newStack->top = -1;
+    newStack->stackArr = (ElementType*)malloc(sizeof(ElementType)*size);
+    newStack->capacity = size;
+
+    return newStack;
+}
+
+bool isEmptyStack(Stack *s) {
+    return s->top == -1;
+}
+
+bool isFullStack(Stack *s) {
+    return s->top + 1 == s->capacity;
+}
+
+void push(Stack *s, ElementType val) {
+    if(!isFullStack(s)) {
+        (s->stackArr)[++s->top] = val;
+    }
+    else {
+        printf("Stack is full!\n");
+        abort();
+    }
+}
+
+ElementType pop(Stack *s) {
+    if(isEmptyStack(s)) {
+        printf("Stack is empty!\n");
+        abort();
+    }
+    
+    return (s->stackArr)[(s->top)--];
+}
+
+ElementType getTopEle(Stack *s) {
+    if(isEmptyStack(s)) {
+        printf("Stack is empty!\n");
+        abort();
+    }
+    
+    return (s->stackArr)[s->top];
+}
+
+void freeStack(Stack *s) {
+    free(s->stackArr);
+    free(s);
+}
+
+bool isDigitStr(char *str) {
+    return !(strlen(str) == 1 && (str[0] > '9' || str[0] < '0'));
+}
+
+int strToInt(char *str) {
+    int num;
+
+    num = 0;
+
+    if(str[0] == '-') {
+        for(int i = 1; str[i]; i++) {
+            num = num*10 + str[i] - '0';
+        }
+        num *= -1;
+    }
+    else {
+        for(int i = 0; str[i]; i++) {
+            num = num*10 + str[i] - '0';
+        }
+    }
+
+    return num;
+}
+
+int evalRPN(char ** tokens, int tokensSize){
+    Stack *s;
+    int num1, num2, res;
+
+    s = makeNewStack(tokensSize);
+
+    for(int i = 0; i < tokensSize; i++) {
+        if(isDigitStr(tokens[i])) {
+            push(s, strToInt(tokens[i]));
+        }
+        else {
+            num2 = pop(s);
+            num1 = pop(s);
+
+            switch(tokens[i][0]) {
+                case '+': push(s, num1+num2); break;
+                case '-': push(s, num1-num2); break;
+                case '*': push(s, num1*num2); break;
+                case '/': push(s, num1/num2); break;
+            }
+        }
+    }
+
+    res = pop(s);
+    freeStack(s);
+
+    return res;
+}
+```
+
+
+
 ## 43.往完全二叉树添加节点(中等)
 
 https://leetcode.cn/problems/NaqhDT/description/
